@@ -1,0 +1,6 @@
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\bin\Debug\Test.exe
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\bin\Debug\Test.pdb
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\obj\Debug\ComplexFile.csprojAssemblyReference.cache
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\obj\Debug\ComplexFile.csproj.CoreCompileInputs.cache
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\obj\Debug\Test.exe
+E:\user\Documents\Exercises\ComplexFile\ComplexFile\obj\Debug\Test.pdb
