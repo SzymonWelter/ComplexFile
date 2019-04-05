@@ -28,25 +28,6 @@ namespace ComplexStorage
 
     public int BlockNumber { get; set; }
 
-    public static SystemFile Create(byte[] bytes)
-    {
-      return new SystemFile()
-      {
-        Type = BitConverter.ToInt32(bytes, 0),
-        Next = BitConverter.ToInt32(bytes, SystemFile.DataSize + 4),
-        Data = ((IEnumerable<byte>) bytes).Skip<byte>(4).Take<byte>(SystemFile.DataSize).ToArray<byte>()
-      };
-    }
-
-    public byte[] ToBytes()
-    {
-      List<byte> byteList = new List<byte>();
-      byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.Type));
-      byteList.AddRange((IEnumerable<byte>) this.Data);
-      byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.Next));
-      return byteList.ToArray();
-    }
-
     public static byte[] ToBytes(byte[] buffer, int count, int blockNumber)
     {
       List<byte> byteList = new List<byte>();

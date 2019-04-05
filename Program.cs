@@ -13,11 +13,9 @@ namespace ComplexStorage
   {
     public static void Main(string[] args)
     {
-      using (ComplexFile cf = ComplexFile.OpenOrCreate("E:\\user\\Documents\\webdav\\WebDav\\bin\\Debug\\ComplexFiles\\new.dmsw"))
+      using (ComplexFile cf = ComplexFile.OpenOrCreate("twoja_stara"))
       {
-        byte[] buffer = new byte[504];
-        using (ProxyStream proxyStream = new ProxyStream(cf, cf.GetDirectoryById("0UzDAqxrw54E8tf0IX").First<FileHeader>()))
-          proxyStream.Read(buffer, 0, 504);
+        
       }
       Console.WriteLine();
       Console.ReadKey();

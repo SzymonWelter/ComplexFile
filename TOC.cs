@@ -19,7 +19,7 @@ namespace ComplexStorage
       this.Type = 0;
     }
 
-    public List<FileHeader> FileHeaders { get; private set; }
+    public List<FileHeader> FileHeaders { get; set; }
 
     public int Type { get; set; }
 
@@ -40,53 +40,27 @@ namespace ComplexStorage
       return new byte[ComplexFile.BlockSize];
     }
 
-    public static TOC Create(byte[] toc)
-    {
-      int int32_1 = BitConverter.ToInt32(toc, 0);
-      List<FileHeader> fileHeaders = TOC.GetFileHeaders(((IEnumerable<byte>) toc).Skip<byte>(4).Take<byte>(TOC.FileHeaderNumber * FileHeader.HeaderSize).ToArray<byte>());
-      int int32_2 = BitConverter.ToInt32(toc, ComplexFile.BlockSize - 4);
-      return new TOC()
-      {
-        Type = int32_1,
-        Next = int32_2,
-        FileHeaders = fileHeaders
-      };
-    }
-
     public byte[] ToBytes()
     {
-      byte[] array = this.AppendBytesToArray(BitConverter.GetBytes(this.Type), new byte[0]);
+      byte[] array = AppendBytesToArray(BitConverter.GetBytes(this.Type), new byte[0]);
       foreach (FileHeader fileHeader in this.FileHeaders)
-        array = this.AppendBytesToArray(fileHeader.ToBytes(), array);
+        array = AppendBytesToArray(fileHeader.ToBytes(), array);
       for (int index = 0; index < TOC.FileHeaderNumber - this.FileHeaders.Count; ++index)
-        array = this.AppendBytesToArray(FileHeader.Empty(), array);
-      return this.AppendBytesToArray(BitConverter.GetBytes(this.Next), array);
+        array = AppendBytesToArray(FileHeader.Empty(), array);
+      return AppendBytesToArray(BitConverter.GetBytes(this.Next), array);
     }
 
     public bool AddFileHeader(FileHeader newHeader)
     {
-      if (this.FileHeaders.Count == TOC.FileHeaderNumber)
+      if (FileHeaders.Count == TOC.FileHeaderNumber)
         return false;
       this.FileHeaders.Add(newHeader);
       return true;
     }
 
-    public static List<FileHeader> GetFileHeaders(byte[] headers)
-    {
-      List<FileHeader> fileHeaderList = new List<FileHeader>();
-      for (int index = 0; index < TOC.FileHeaderNumber; ++index)
-      {
-        FileHeader fileHeader = FileHeader.Create(((IEnumerable<byte>) headers).Skip<byte>(index * FileHeader.HeaderSize).Take<byte>(FileHeader.HeaderSize).ToArray<byte>());
-        if (fileHeader == null)
-          return fileHeaderList;
-        fileHeaderList.Add(fileHeader);
-      }
-      return fileHeaderList;
-    }
-
     public FileHeader GetFileHeaderById(string id)
     {
-      foreach (FileHeader fileHeader in this.FileHeaders)
+      foreach (FileHeader fileHeader in FileHeaders)
       {
         if (fileHeader.Id == id)
           return fileHeader;

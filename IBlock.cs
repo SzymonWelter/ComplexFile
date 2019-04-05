@@ -12,6 +12,5 @@ namespace ComplexStorage
 
     int Next { get; set; }
 
-    byte[] ToBytes();
   }
 }
