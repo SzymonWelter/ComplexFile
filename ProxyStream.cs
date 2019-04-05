@@ -12,61 +12,37 @@ namespace ComplexStorage
   public class ProxyStream : Stream
   {
     private Stream cf;
+    private ICFSettings settings;
     private readonly int startBlock;
     private readonly long size;
 
     public ProxyStream(ComplexFile cf, FileHeader fileHeader)
     {
-      this.cf = (Stream) cf;
-      this.startBlock = fileHeader.BlockNumber;
-      this.size = (long) fileHeader.Size;
-      this.Position = 0L;
+      settings = ComplexFile.Settings;
+      this.cf = (FileStream) cf;
+      startBlock = fileHeader.BlockNumber;
+      size = (long) fileHeader.Size;
+      Position = 0;
     }
 
-    public override bool CanRead
-    {
-      get
-      {
-        return this.cf.CanRead;
-      }
-    }
+    public override bool CanRead => cf.CanRead;
 
-    public override bool CanSeek
-    {
-      get
-      {
-        return this.cf.CanSeek;
-      }
-    }
+    public override bool CanSeek => cf.CanSeek;
+    public override bool CanWrite => cf.CanWrite;
 
-    public override bool CanWrite
-    {
-      get
-      {
-        return this.cf.CanWrite;
-      }
-    }
-
-    public override long Length
-    {
-      get
-      {
-        return this.size;
-      }
-    }
-
+    public override long Length => size;
     public override long Position
     {
       get
       {
-        return (long) (((int) ((this.cf.Position - 4L) / (long) ComplexFile.BlockSize) - this.startBlock) * SystemFile.DataSize + ((int) ((this.cf.Position - 4L) % (long) ComplexFile.BlockSize) - 4));
+        return (long) (((int) ((this.cf.Position - 4) / (long) settings.BlockSize) - this.startBlock) * settings.DataSize + ((int) ((this.cf.Position - 4L) % (long) settings.BlockSize) - 4));
       }
       set
       {
-        if (value <= this.size && value >= 0L)
-          this.cf.Position = (long) (((int) (value / (long) SystemFile.DataSize) + this.startBlock) * ComplexFile.BlockSize + 4 + ((int) (value % (long) SystemFile.DataSize) + 4));
+        if (value <= size && value >= 0)
+          cf.Position = (long) (((int) (value / (long) settings.DataSize) + this.startBlock) * settings.BlockSize + 4 + ((int) (value % (long) settings.DataSize) + 4));
         else
-          throw new ArgumentOutOfRangeException("Position value is too large: " + (object) value + ", size: " + (object) this.size);
+          throw new ArgumentOutOfRangeException("Position value is too large: " + value + ", size: " + this.size);
       }
     }
 
@@ -78,7 +54,7 @@ namespace ComplexStorage
     public override int Read(byte[] buffer, int offset, int count)
     {
       this.SetPosition();
-      int count1 = SystemFile.DataSize - (int) (this.Position % (long) SystemFile.DataSize);
+      int count1 = settings.DataSize - (int) (this.Position % (long) settings.DataSize);
       this.SetPosition();
       if (this.Position + (long) count1 > this.size)
       {
@@ -86,10 +62,10 @@ namespace ComplexStorage
         return this.cf.Read(buffer, 0, (int) (this.size - this.Position));
       }
       int offset1 = this.cf.Read(buffer, 0, count1);
-      for (int index = count - SystemFile.DataSize; offset1 <= index; offset1 += this.cf.Read(buffer, offset1, SystemFile.DataSize))
+      for (int index = count - settings.DataSize; offset1 <= index; offset1 += this.cf.Read(buffer, offset1, settings.DataSize))
       {
         this.SetPosition();
-        if (this.Position + (long) SystemFile.DataSize >= this.size)
+        if (this.Position + (long) settings.DataSize >= this.size)
           return offset1 + this.cf.Read(buffer, offset1, (int) (this.size - this.Position));
       }
       if (this.Position + (long) count - (long) offset1 >= this.size)

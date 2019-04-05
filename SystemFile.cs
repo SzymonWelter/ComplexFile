@@ -12,13 +12,6 @@ namespace ComplexStorage
 {
   public class SystemFile : IBlock
   {
-    public static int DataSize
-    {
-      get
-      {
-        return ComplexFile.BlockSize - 8;
-      }
-    }
 
     public int Type { get; set; }
 
@@ -33,7 +26,7 @@ namespace ComplexStorage
       List<byte> byteList = new List<byte>();
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(1));
       byteList.AddRange(((IEnumerable<byte>) buffer).Take<byte>(count));
-      byteList.AddRange((IEnumerable<byte>) new byte[ComplexFile.BlockSize - 8 - count]);
+      byteList.AddRange((IEnumerable<byte>) new byte[ComplexFile.Settings.BlockSize - 8 - count]);
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(blockNumber));
       return byteList.ToArray();
     }

@@ -11,19 +11,18 @@ namespace ComplexStorage
     public string Id { get; set; }
     public int BlockNumber { get; set; }
     public int Size { get; set; }
-
-    public static int HeaderSize => (ComplexFile.BlockSize - 8) / TOC.FileHeaderNumber;
     public static int IdSize => 18;
     public static int NameSize => 100;
 
     public static FileHeader Create(byte[] bytes)
     {
-      int blockNumber = BitConverter.ToInt32(bytes, FileHeader.IdSize + FileHeader.NameSize);
+      int headerSize = ComplexFile.Settings.HeaderSize;
+      int blockNumber = BitConverter.ToInt32(bytes, headerSize + FileHeader.NameSize);
       if (blockNumber == 0)
         return null;
-      string id = Encoding.ASCII.GetString((bytes).Take(FileHeader.IdSize).ToArray());
-      string name = Encoding.ASCII.GetString(bytes.Skip(FileHeader.IdSize).Take(FileHeader.NameSize).ToArray());
-      int size = BitConverter.ToInt32(bytes, FileHeader.IdSize + FileHeader.NameSize + 4);
+      string id = Encoding.ASCII.GetString((bytes).Take(headerSize).ToArray());
+      string name = Encoding.ASCII.GetString(bytes.Skip(headerSize).Take(FileHeader.NameSize).ToArray());
+      int size = BitConverter.ToInt32(bytes, headerSize + FileHeader.NameSize + 4);
       return new FileHeader()
       {
         BlockNumber = blockNumber,
@@ -41,11 +40,6 @@ namespace ComplexStorage
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.BlockNumber));
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.Size));
       return byteList.ToArray();
-    }
-
-    public static byte[] Empty()
-    {
-      return new byte[FileHeader.HeaderSize];
     }
   }
 }

@@ -5,7 +5,7 @@ public interface ICFSettings
     int IdSize{get;}
     int NameSize{get;}
     int HeaderSize{get;}
-
+    string RootName{get;}
     int DataSize{get;}
 
 }

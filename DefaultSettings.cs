@@ -9,9 +9,9 @@ public class DefaultSettings : ICFSettings
     public int HeadersNumber => 4;
 
     public int IdSize => 18;
-
     public int NameSize => 100;
     public int HeaderSize => (BlockSize - 8)/HeadersNumber;
 
     public int DataSize => BlockSize - 8;
+    public string RootName => "root";
 }

@@ -8,46 +8,23 @@ namespace ComplexStorage
 {
     public class ComplexFile : FileStream
     {
-        /*
-        ** Size of blocks (TOCs and SystemFile)
-        */
         public static ICFSettings Settings { get; private set; }
 
         private IBlockFactory blockFactory;
+        private HeaderFactory headerFactory;
         private List<TOC> TOCs;
-        public static int BlockSize
-        {
-            get
-            {
-                return 512;
-            }
-        }
 
         /*
         ** Actual number of blocks in ComplexFile
         */
-        public int BlockNumber
-        {
-            get
-            {
-                return (int)(this.Length - 4) / ComplexFile.BlockSize;
-            }
-        }
-        /*
-          Name of root direction in ComplexFile
-        */
-        public string RootName
-        {
-            get
-            {
-                return "root";
-            }
-        }
+        public int BlockNumber => (int) (Length / Settings.BlockSize);
+
 
         private ComplexFile(string path, FileMode mode)
           : base(path, mode)
         {
             blockFactory = BlockFactory.Instance;
+            headerFactory = HeaderFactory.Instance;
             TOCs = GetTOCs();
         }
 
@@ -80,12 +57,7 @@ namespace ComplexStorage
         {
             try
             {
-                FileHeader fileHeader = new FileHeader()
-                {
-                    Id = GenerateId("0"),
-                    Name = name + new string(char.MinValue, FileHeader.NameSize - name.Length),
-                    Size = 0
-                };
+                var fileHeader = headerFactory.CreateDirectory(name);
                 TOC tocForHeader = GetTOCForHeader(fileHeader, localizationId);
                 fileHeader.BlockNumber = BlockNumber;
                 WriteNewTOC();
@@ -107,35 +79,25 @@ namespace ComplexStorage
             return type + id.ToString();
         }
 
-        public string CreateFile(Stream stream, string name, string localizationId, string id = "")
+        public string CreateFile(Stream stream, string name, string localizationId)
         {
-            /////////MOVE TO FACTORY
-            if (id == "")
-                id = this.GenerateId("1");
-            FileHeader fileHeader = new FileHeader()
-            {
-                Id = id,
-                Name = name + new string(char.MinValue, Settings.NameSize - name.Length),
-                Size = (int)stream.Length
-            };
-            //////////MOVE TO FACTORY
-
+            var fileHeader = headerFactory.CreateFile(name);
             TOC tocForHeader = GetTOCForHeader(fileHeader, localizationId);
             fileHeader.BlockNumber = BlockNumber;
             stream.Position = 0;
-            this.Seek(0, SeekOrigin.End);
+            Seek(0, SeekOrigin.End);
             byte[] buffer = new byte[Settings.BlockSize - 8];
             for (int count = stream.Read(buffer, 0, Settings.BlockSize - 8); count > 0; count = stream.Read(buffer, 0, Settings.BlockSize - 8))
             {
                 int blockNumber = BlockNumber + 1;
                 if (count < Settings.BlockSize - 8)
                     blockNumber = 0;
-                this.Write(SystemFile.ToBytes(buffer, count, blockNumber), 0, Settings.BlockSize);
+                Write(SystemFile.ToBytes(buffer, count, blockNumber), 0, Settings.BlockSize);
                 buffer = new byte[Settings.BlockSize - 8];
             }
             tocForHeader.AddFileHeader(fileHeader);
-            this.Position = (long)(tocForHeader.BlockNumber * Settings.BlockSize + 4);
-            this.Write(tocForHeader.ToBytes(), 0, Settings.BlockSize);
+            Position = (long)(tocForHeader.BlockNumber * Settings.BlockSize + 4);
+            Write(blockFactory.CreateBlock(tocForHeader), 0, Settings.BlockSize);
             return "The file was uploaded successfully";
         }
 
@@ -145,7 +107,7 @@ namespace ComplexStorage
 
         private IBlock GetBlockById(string id)
         {
-            if (id == this.RootName)
+            if (id == Settings.RootName)
                 return (IBlock)this.GetTOCByBlockNumber(0);
             Stack<int> intStack = new Stack<int>();
             intStack.Push(0);
@@ -164,7 +126,7 @@ namespace ComplexStorage
                         intStack.Push(tocByBlockNumber.Next);
                 }
             }
-            return (IBlock)null;
+            return null;
         }
 
         public List<TOC> GetTOCs()
@@ -207,13 +169,13 @@ namespace ComplexStorage
 
         public FileHeader GetParentHeader(string id)
         {
-            return this.GetFileHeaderByBlockNumber(GetTOCUpper(id).BlockNumber);
+            return GetFileHeaderByBlockNumber(GetTOCUpper(id).BlockNumber);
         }
 
         private FileHeader GetFileHeaderByBlockNumber(int blockNumber)
         {
             if (blockNumber == 0)
-                return new FileHeader() { Id = this.RootName };
+                return new FileHeader() { Id = Settings.RootName };
             foreach (TOC toC in this.GetTOCs())
             {
                 foreach (FileHeader fileHeader in toC.FileHeaders)
@@ -227,7 +189,7 @@ namespace ComplexStorage
 
         private TOC GetTOCUpper(string id)
         {
-            if (id == this.RootName)
+            if (id == Settings.RootName)
                 return this.GetTOCByBlockNumber(0);
             TOC toc1 = (TOC)null;
             List<TOC> toCs = this.GetTOCs();
@@ -318,19 +280,20 @@ namespace ComplexStorage
 
         private TOC GetTOCForHeader(FileHeader fileHeader, string localizationId)
         {
-            TOC toc = this.GetTOCById(localizationId);
+            TOC toc = GetTOCById(localizationId);
             if (toc.ContainsFileHeader(fileHeader.Id))
                 throw new Exception("That path exists already!");
-            for (; toc.Next != 0 && toc.FileHeaders.Count == TOC.FileHeaderNumber; toc = this.GetTOCByBlockNumber(toc.Next))
+            while (toc.Next != 0 && toc.FileHeaders.Count == Settings.HeadersNumber )
             {
                 if (toc.ContainsFileHeader(fileHeader.Id))
                     throw new Exception("That path exists already!");
+                toc = GetTOCByBlockNumber(toc.Next);
             }
-            if (toc.FileHeaders.Count == TOC.FileHeaderNumber)
+            if (toc.FileHeaders.Count == Settings.HeadersNumber)
             {
-                this.WriteNewTOC();
-                this.Position = (long)((toc.BlockNumber + 1) * Settings.BlockSize);
-                this.Write(BitConverter.GetBytes(this.BlockNumber - 1), 0, 4);
+                WriteNewTOC();
+                Position = (long)((toc.BlockNumber + 1) * Settings.BlockSize);
+                Write(BitConverter.GetBytes(this.BlockNumber - 1), 0, 4);
                 toc = new TOC()
                 {
                     BlockNumber = this.BlockNumber - 1

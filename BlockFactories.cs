@@ -24,7 +24,6 @@ namespace ComplexStorage
         {
             if (block[0] == (byte)0)
             {
-                //(IBlock)TOC.Create(blockBytes)
                 var hf = HeaderFactory.Instance;
                 var fileHeaders = hf.CreateHeaders(
                         block.Skip(4).Take(settings.BlockSize - 8).ToArray()
@@ -36,7 +35,6 @@ namespace ComplexStorage
                     FileHeaders = fileHeaders
                 };
             }
-            //(IBlock)SystemFile.Create(block);
             return new SystemFile()
             {
                 Type = BitConverter.ToInt32(block, 0),
@@ -54,7 +52,7 @@ namespace ComplexStorage
                 foreach (FileHeader fileHeader in toc.FileHeaders)
                     byteList.AddRange(fileHeader.ToBytes());
                 for (int index = 0; index < settings.HeadersNumber - toc.FileHeaders.Count; index++)
-                    byteList.AddRange(new byte [settings.HeaderSize]);
+                    byteList.AddRange(new byte[settings.HeaderSize]);
                 byteList.AddRange(BitConverter.GetBytes(toc.Next));
                 return byteList.ToArray();
             }
@@ -78,9 +76,9 @@ namespace ComplexStorage
             int blockNumber = BitConverter.ToInt32(header, settings.IdSize + settings.NameSize);
             if (blockNumber == 0)
                 return null;
-            string id = Encoding.ASCII.GetString((header).Take(FileHeader.IdSize).ToArray());
-            string name = Encoding.ASCII.GetString(header.Skip(FileHeader.IdSize).Take(FileHeader.NameSize).ToArray());
-            int size = BitConverter.ToInt32(header, FileHeader.IdSize + FileHeader.NameSize + 4);
+            string id = Encoding.ASCII.GetString((header).Take(settings.IdSize).ToArray());
+            string name = Encoding.ASCII.GetString(header.Skip(settings.IdSize).Take(FileHeader.NameSize).ToArray());
+            int size = BitConverter.ToInt32(header, settings.IdSize + FileHeader.NameSize + 4);
             return new FileHeader()
             {
                 BlockNumber = blockNumber,
@@ -96,7 +94,7 @@ namespace ComplexStorage
             for (int index = 0; index < settings.HeadersNumber; index++)
             {
                 var fileHeader = CreateHeader(
-                    headers.Skip(index * settings.HeaderSize).Take(FileHeader.HeaderSize).ToArray()
+                    headers.Skip(index * settings.HeaderSize).Take(settings.HeaderSize).ToArray()
                 );
                 if (fileHeader == null)
                     return fileHeaderList;
@@ -105,9 +103,28 @@ namespace ComplexStorage
             return fileHeaderList;
         }
 
-        public byte[] CreateBlock(IBlock block)
+        public byte[] CreateBlock(FileHeader fileHeader)
         {
-            throw new NotImplementedException();
+            List<byte> byteList = new List<byte>();
+            byteList.AddRange((IEnumerable<byte>)Encoding.ASCII.GetBytes(fileHeader.Id));
+            byteList.AddRange((IEnumerable<byte>)Encoding.ASCII.GetBytes(fileHeader.Name));
+            byteList.AddRange((IEnumerable<byte>)BitConverter.GetBytes(fileHeader.BlockNumber));
+            byteList.AddRange((IEnumerable<byte>)BitConverter.GetBytes(fileHeader.Size));
+            return byteList.ToArray();
         }
+
+        public FileHeader CreateDirectory(string name) =>
+            new FileHeader{
+                Id = "0" + Utilities.GenerateId(),
+                Name = name + new string(char.MinValue, ComplexFile.Settings.NameSize - name.Length),
+                Size = 0
+            };        
+        
+        public FileHeader CreateFile(string name) =>
+            new FileHeader{
+                Id = "1" + Utilities.GenerateId(),
+                Name = name + new string(char.MinValue, ComplexFile.Settings.NameSize - name.Length),
+                Size = 0
+            };
     }
 }
