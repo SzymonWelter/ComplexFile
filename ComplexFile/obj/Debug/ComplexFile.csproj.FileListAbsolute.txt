@@ -1,0 +1,7 @@
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\obj\Debug\ComplexFile.csprojAssemblyReference.cache
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\obj\Debug\ComplexFile.csproj.CoreCompileInputs.cache
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\bin\Debug\ComplexFile.exe.config
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\bin\Debug\ComplexFile.exe
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\bin\Debug\ComplexFile.pdb
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\obj\Debug\ComplexFile.exe
+E:\user\Repositories\Temp\ComplexFile\ComplexFile\ComplexFile\obj\Debug\ComplexFile.pdb

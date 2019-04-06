@@ -13,15 +13,17 @@ namespace ComplexStorage
 
     public class BlockFactory : IBlockFactory
     {
-        private BlockFactory() { }
+        private BlockFactory() { 
+        }
 
         private static BlockFactory instance = new BlockFactory();
         public static BlockFactory Instance => instance;
 
-        private ICFSettings settings = ComplexFile.Settings;
+        private ICFSettings settings;
 
         public IBlock CreateBlock(byte[] block)
         {
+            settings = ComplexFile.Settings;
             if (block[0] == (byte)0)
             {
                 var hf = HeaderFactory.Instance;

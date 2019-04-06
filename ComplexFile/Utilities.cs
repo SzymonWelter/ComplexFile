@@ -7,7 +7,7 @@ public static class Utilities
 {
     public static byte[] ToBytes(ICFSettings settings)
     {
-        throw new NotImplementedException();
+        return new byte[512];
     }
 
     public static string GenerateId()

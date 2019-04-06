@@ -8,7 +8,7 @@ namespace ComplexStorage
 {
     public class ComplexFile : FileStream
     {
-        public static ICFSettings Settings { get; private set; }
+        public static ICFSettings Settings; 
 
         private IBlockFactory blockFactory;
         private HeaderFactory headerFactory;
@@ -19,10 +19,10 @@ namespace ComplexStorage
         */
         public int BlockNumber => (int) (Length / Settings.BlockSize);
 
-
         private ComplexFile(string path, FileMode mode)
           : base(path, mode)
         {
+            Settings = DefaultSettings.Instance; //TODO Load settings from zero block
             blockFactory = BlockFactory.Instance;
             headerFactory = HeaderFactory.Instance;
             TOCs = GetTOCs();
@@ -33,10 +33,9 @@ namespace ComplexStorage
         */
         public static ComplexFile Create(string path, ICFSettings settings)
         {
-            settings = settings ?? DefaultSettings.Instance;
             ComplexFile complexFile = new ComplexFile(path, FileMode.Create);
-            complexFile.Write(Utilities.ToBytes(settings), 0, settings.BlockSize);
-            complexFile.Write(new byte[settings.BlockSize], 0, settings.BlockSize);
+            complexFile.Write(Utilities.ToBytes(Settings), 0, Settings.BlockSize);
+            complexFile.Write(new byte[Settings.BlockSize], 0, Settings.BlockSize);
             complexFile.Close();
             return Open(path);
         }
@@ -62,7 +61,7 @@ namespace ComplexStorage
                 fileHeader.BlockNumber = BlockNumber;
                 WriteNewTOC();
                 tocForHeader.AddFileHeader(fileHeader);
-                Position = (long)(tocForHeader.BlockNumber * Settings.BlockSize + 4);
+                Position = (tocForHeader.BlockNumber * Settings.BlockSize);
                 Write(blockFactory.CreateBlock(tocForHeader), 0, Settings.BlockSize);
             }
             catch (Exception ex)
@@ -108,22 +107,25 @@ namespace ComplexStorage
         private IBlock GetBlockById(string id)
         {
             if (id == Settings.RootName)
-                return (IBlock)this.GetTOCByBlockNumber(0);
+                return GetTOCByBlockNumber(1);
             Stack<int> intStack = new Stack<int>();
-            intStack.Push(0);
+            intStack.Push(1);
             while (intStack.Count > 0)
             {
-                TOC tocByBlockNumber = this.GetTOCByBlockNumber(intStack.Pop());
+                TOC tocByBlockNumber = GetTOCByBlockNumber(intStack.Pop());
                 if (tocByBlockNumber != null)
                 {
                     foreach (FileHeader fileHeader in tocByBlockNumber.FileHeaders)
                     {
                         if (fileHeader.Id == id)
-                            return this.GetBlockByNumber(fileHeader.BlockNumber);
+                            return GetBlockByNumber(fileHeader.BlockNumber);
                         intStack.Push(fileHeader.BlockNumber);
                     }
-                    for (; tocByBlockNumber.Next > 0; tocByBlockNumber = GetTOCByBlockNumber(tocByBlockNumber.Next))
+                    while (tocByBlockNumber.Next > 0)
+                    {
                         intStack.Push(tocByBlockNumber.Next);
+                        tocByBlockNumber = GetTOCByBlockNumber(tocByBlockNumber.Next);
+                    }
                 }
             }
             return null;
@@ -236,14 +238,24 @@ namespace ComplexStorage
             return (TOC)null;
         }
 
-        public TOC GetTOCByBlockNumber(int blockNumber) => (TOC)GetBlockByNumber(blockNumber);
+        public TOC GetTOCByBlockNumber(int blockNumber)
+        {
+            var toc = (TOC)GetBlockByNumber(blockNumber);
+            toc.BlockNumber = blockNumber;
+            return toc;
+        }
 
-        public SystemFile GetFileByBlockNumber(int blockNumber) => (SystemFile)GetBlockByNumber(blockNumber);
+        public SystemFile GetFileByBlockNumber(int blockNumber)
+        {
+            var sf = (SystemFile)GetBlockByNumber(blockNumber);
+            sf.BlockNumber = blockNumber;
+            return sf;
+        }
 
         public IBlock GetBlockByNumber(int blockNumber)
         {
             byte[] blockBytes = new byte[Settings.BlockSize];
-            Position = (long)(blockNumber * Settings.BlockSize);
+            Position = (blockNumber * Settings.BlockSize);
             Read(blockBytes, 0, Settings.BlockSize);
             return blockFactory.CreateBlock(blockBytes);
         }
@@ -274,8 +286,8 @@ namespace ComplexStorage
 
         private void WriteNewTOC()
         {
-            this.Seek(0, SeekOrigin.End);
-            this.Write(new byte[Settings.BlockSize], 0, Settings.BlockSize);
+            Seek(0, SeekOrigin.End);
+            Write(new byte[Settings.BlockSize], 0, Settings.BlockSize);
         }
 
         private TOC GetTOCForHeader(FileHeader fileHeader, string localizationId)
@@ -292,11 +304,11 @@ namespace ComplexStorage
             if (toc.FileHeaders.Count == Settings.HeadersNumber)
             {
                 WriteNewTOC();
-                Position = (long)((toc.BlockNumber + 1) * Settings.BlockSize);
-                Write(BitConverter.GetBytes(this.BlockNumber - 1), 0, 4);
+                Position = (toc.BlockNumber + 1) * Settings.BlockSize - 4;
+                Write(BitConverter.GetBytes(BlockNumber - 1), 0, 4);
                 toc = new TOC()
                 {
-                    BlockNumber = this.BlockNumber - 1
+                    BlockNumber = BlockNumber - 1
                 };
             }
             return toc;
