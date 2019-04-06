@@ -12,13 +12,6 @@ namespace ComplexStorage
 {
   public class SystemFile : IBlock
   {
-    public static int DataSize
-    {
-      get
-      {
-        return ComplexFile.BlockSize - 8;
-      }
-    }
 
     public int Type { get; set; }
 
@@ -28,31 +21,12 @@ namespace ComplexStorage
 
     public int BlockNumber { get; set; }
 
-    public static SystemFile Create(byte[] bytes)
-    {
-      return new SystemFile()
-      {
-        Type = BitConverter.ToInt32(bytes, 0),
-        Next = BitConverter.ToInt32(bytes, SystemFile.DataSize + 4),
-        Data = ((IEnumerable<byte>) bytes).Skip<byte>(4).Take<byte>(SystemFile.DataSize).ToArray<byte>()
-      };
-    }
-
-    public byte[] ToBytes()
-    {
-      List<byte> byteList = new List<byte>();
-      byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.Type));
-      byteList.AddRange((IEnumerable<byte>) this.Data);
-      byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(this.Next));
-      return byteList.ToArray();
-    }
-
     public static byte[] ToBytes(byte[] buffer, int count, int blockNumber)
     {
       List<byte> byteList = new List<byte>();
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(1));
       byteList.AddRange(((IEnumerable<byte>) buffer).Take<byte>(count));
-      byteList.AddRange((IEnumerable<byte>) new byte[ComplexFile.BlockSize - 8 - count]);
+      byteList.AddRange((IEnumerable<byte>) new byte[ComplexFile.Settings.BlockSize - 8 - count]);
       byteList.AddRange((IEnumerable<byte>) BitConverter.GetBytes(blockNumber));
       return byteList.ToArray();
     }
