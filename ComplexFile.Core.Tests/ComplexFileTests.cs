@@ -41,20 +41,20 @@ namespace ComplexFile.Core.Tests
         {
             var path = @"complexFile.cxfl";
 
-            using (_ = new ComplexFile(path)) { } ;
+            _ = new ComplexFile(path);
 
             Assert.True(File.Exists(path));
         }
 
         [Fact]
-        public void IfPassedPathIsCorrectAndFileExists_ThenComplexFileShouldStoreNameOfFile()
+        public void IfPassedPathIsCorrectAndFileExistsAndIsEmpty_ThenComplexFileShouldStoreNameOfFile()
         {
             var path = @"complexFile.cxfl";
-            using (_ = File.Create(path)) { } ;
-            using (var complexFile = new ComplexFile(path)) {
+            using (_ = File.Create(path)) { }
 
-                Assert.Equal(Path.GetFileName(path), Path.GetFileName(complexFile.Name));
-            };
+            var complexFile = new ComplexFile(path);
+
+            Assert.Equal(Path.GetFileName(path), Path.GetFileName(complexFile.Name));
         }
     }
 }
