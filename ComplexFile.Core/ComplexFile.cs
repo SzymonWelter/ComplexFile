@@ -1,6 +1,7 @@
 ﻿using ComplexFile.Core.Exceptions;
 using ComplexFile.Core.Validation;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace ComplexFile.Core
@@ -16,6 +17,7 @@ namespace ComplexFile.Core
         public override long Length => throw new NotImplementedException();
 
         public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string Name { get; }
 
         public ComplexFile(string path)
         {
