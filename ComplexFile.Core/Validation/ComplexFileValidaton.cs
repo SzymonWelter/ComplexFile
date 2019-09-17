@@ -6,7 +6,6 @@ namespace ComplexFile.Core.Validation
 {
     public class ComplexFileValidation : IComplexFileValidaton
     {
-        private IPathValidationMember _pathValidation;
         private IValidationFactory _validatonFactory;
         public ComplexFileValidation()
         {

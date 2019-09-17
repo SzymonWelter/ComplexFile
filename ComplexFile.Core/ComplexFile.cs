@@ -19,11 +19,7 @@ namespace ComplexFile.Core
 
         private static void ValidPath(string path)
         {
-            var vp = new ComplexFilePathValidation(path);
-            if (!vp.ValidPath())
-            {
-                throw new WrongPathException(vp.Path);
-            }
+
         }
     }
 }
