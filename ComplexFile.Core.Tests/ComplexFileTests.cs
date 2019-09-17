@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using ComplexFile.Core.Exceptions;
+using System.IO;
 
 namespace ComplexFile.Core.Tests
 {
@@ -24,6 +25,36 @@ namespace ComplexFile.Core.Tests
             Func<ComplexFile> cf = () => new ComplexFile(path);
 
             Assert.Throws<WrongPathException>(cf.Invoke);
+        }
+
+        [Fact]
+        public void IfPassedPathWhichIsNotAllowedForUser_ThenThrowException()
+        {
+            var path = @"C:\Windows\cplfile.cxfl";
+
+            Func<ComplexFile> cf = () => new ComplexFile(path);
+
+            Assert.Throws<WrongPathException>(cf.Invoke);
+        }
+        [Fact]
+        public void IfPassedPathIsCorrectAndFileDontExists_ThenComplexFileShouldBeCreated()
+        {
+            var path = @"complexFile.cxfl";
+
+            _ = new ComplexFile(path);
+
+            Assert.True(File.Exists(path));
+        }
+
+        [Fact]
+        public void IfPassedPathIsCorrectAndFileExistsAndIsEmpty_ThenComplexFileShouldStoreNameOfFile()
+        {
+            var path = @"complexFile.cxfl";
+            using (_ = File.Create(path)) { }
+
+            var complexFile = new ComplexFile(path);
+
+            Assert.Equal(Path.GetFileName(path), Path.GetFileName(complexFile.Name));
         }
     }
 }
