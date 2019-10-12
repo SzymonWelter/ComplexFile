@@ -1,5 +1,4 @@
-﻿using ComplexFile.Core.Exceptions;
-using ComplexFile.Core.Validation;
+﻿using ComplexFile.Core.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,18 +7,26 @@ namespace ComplexFile.Core
 {
     public class ComplexFile
     {
-        public string Name => Path.GetFileName(_path);
-        private string _path;
+        private readonly ComplexFileConfiguration _complexFileConfiguration;
+        private string path;
+
+        public ComplexFile(string path, ComplexFileConfiguration configuration)
+        {
+        }
+
+        public ComplexFile(ComplexFileConfiguration complexFileConfiguration)
+        {
+            _complexFileConfiguration = complexFileConfiguration;
+        }
 
         public ComplexFile(string path)
         {
-            ValidPath(path);
-            _path = path;
+            this.path = path;
         }
 
-        private static void ValidPath(string path)
+        public ComplexFileStream Create()
         {
-
+            throw new NotImplementedException();
         }
     }
 }
