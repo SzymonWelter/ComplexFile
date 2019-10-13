@@ -4,8 +4,7 @@ using System.Text;
 
 namespace ComplexFile.Core.Configuration
 {
-    public abstract class ComplexFileConfiguration
+    public class DefaultComplexFileConfiguration : IComplexFileConfiguration
     {
-         
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace ComplexFile.Core
+namespace ComplexFile.Core.Stream
 {
     public class ComplexFileStream : FileStream
     {

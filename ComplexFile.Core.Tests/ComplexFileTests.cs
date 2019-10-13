@@ -22,7 +22,7 @@ namespace ComplexFile.Core.Tests
         public void IfInitializeComplexFileWithCustomConfigurationWithPath_ThenFileShouldBeCreated()
         {
             var path = @"ComplexFile.cplf";
-            var configuration = Substitute.For<ComplexFileConfiguration>();
+            var configuration = Substitute.For<IComplexFileConfiguration>();
             var complexFile = new ComplexFile(path, configuration);
 
             var complexFileStream = complexFile.Create();

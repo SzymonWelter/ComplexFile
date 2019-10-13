@@ -1,32 +1,31 @@
 ﻿using ComplexFile.Core.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using ComplexFile.Core.Services.Builders;
+using ComplexFile.Core.Services.Informants;
+using ComplexFile.Core.Stream;
 
 namespace ComplexFile.Core
 {
     public class ComplexFile
     {
-        private readonly ComplexFileConfiguration _complexFileConfiguration;
-        private string path;
+        private readonly IComplexFileConfiguration _configuration;
+        private readonly IComplexFileInfo _info;
 
-        public ComplexFile(string path, ComplexFileConfiguration configuration)
+        public ComplexFile(string path) : this(path, new DefaultComplexFileConfiguration())
+        { }
+
+        public ComplexFile(string path, IComplexFileConfiguration configuration)
         {
+            _info.Path = path;
+            _configuration = configuration;
         }
 
-        public ComplexFile(ComplexFileConfiguration complexFileConfiguration)
+        public IComplexFileStream Create()
         {
-            _complexFileConfiguration = complexFileConfiguration;
-        }
-
-        public ComplexFile(string path)
-        {
-            this.path = path;
-        }
-
-        public ComplexFileStream Create()
-        {
-            throw new NotImplementedException();
-        }
+            var complexFileBuilder = new ComplexFileBuilder(_info);
+            complexFileBuilder.CreateEmptyFile();
+            var fileStream = complexFileBuilder.ConfigureToComplexFile();
+            
+            return fileStream;
+        }        
     }
 }
